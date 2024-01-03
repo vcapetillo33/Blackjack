@@ -1,0 +1,141 @@
+from art import logo
+import random
+import math
+
+cards = [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
+
+
+def need_card(pc_or_user_list, score):  #function to randomly select a card for the player that needs a card
+    play_card = random.choice(cards)
+    pc_or_user_list.append(play_card)
+    score = sum(pc_or_user_list)
+    return score
+
+def check_for_ace(list, score, got_ace):
+    #list_length = len(list)
+    for i in range(len(list)-1, -1, -1):  #Check from RIGHT to LEFT in case pc_list=[11,11], first card=[11]
+        if list[i] == 11:  #may also use 'for i in reversed(range(len(list))):'
+            list[i] = 1
+            score = sum(list)
+            got_ace = True
+            return score, got_ace
+    return score, got_ace
+
+def who_wins(user_score, pc_score):
+    #user_sum = sum(user_list)
+    #pc_sum = sum(pc_list)
+    if user_score > pc_score:
+        print("You win!")
+    else:
+        print(f"Computer's cards: {pc_list}, pc score: {pc_score}")
+        print("Computer wins! You lose.")
+
+    return True
+
+def playgame(user_score, user_list, pc_score, pc_list, game_starts):     #MAIN BODY OF CODE TO BE EXECUTED
+
+    #pc_number = 0  # Need to keep track of the number of times the computer is given a card
+    '''need_card()-->this is how the player is randomly given a card.
+     Also, update user_score & pc_score'''
+    '''Game begins, user is handed two open cards and pc two but one is face down'''
+
+    if game_starts != 2:
+        for i in range(2):
+            got_ace = False  #Every time got_ace is pass as an argument, set it to "False" initially
+            user_score = need_card(user_list, user_score)
+            pc_score = need_card(pc_list, pc_score)
+#Worst case scenario: user_list=[11,11] , pc_list=[11,10] or vice versa. This will take care of that
+            if user_score == 22: #In case player or computer get two Aces to begin
+                user_score, got_ace = check_for_ace(user_list, user_score, got_ace)
+            if pc_score == 22:
+                pc_score, got_ace = check_for_ace(pc_list, pc_score, got_ace)
+            game_starts += 1
+
+
+    print(f"Your cards: {user_list}, current score: {user_score}")
+    print(f"Computer's first card: [{pc_list[0]}]") # pc initially gets two cards as well but only one is shown;
+    #print(pc_number)
+    '''The following applies if the user get 21 and is now the PC's turn'''
+    if user_score == 21:
+        while pc_score !=21:     #[7, 5, 10] or [11, 4, 7, 3,11, 10] or [11, 11, 11]
+            got_ace = False
+            while pc_score < 21:    #giving the pc (dealer) a chance to tie the user 21 score
+                pc_score = need_card(pc_list,pc_score)
+            if pc_score == 21:
+                break
+            '''If code gets to this point pc_score>21'''
+            pc_score, got_ace = check_for_ace(pc_list, pc_score, got_ace)
+            if got_ace == False:
+                print("Computer lost. You win!")
+                print(f"Computer cards: {pc_list}, computer's score: {pc_score}")
+                return True
+        if pc_score == 21:
+            print("It's a tie!")
+            print(pc_list)
+            return True
+
+    '''After these lines, the user_score is obviously < 21, and user must choose another card or stay'''
+    play_cont = "y"
+    while play_cont == "y":     #user might have [11,11] or [11, 9] or [11, 5, 10] or [7,4,10]
+        play_cont = input("Do you want another card. 'y' or 'n'?: ").lower()  #user wants a card
+        if play_cont == "n":
+            break
+        user_score = need_card(user_list, user_score)  #user gets a card to try to get 21
+        print(f"Your cards: {user_list}, your score: {user_score}")
+        if user_score > 21:  #what if user_list =[11,11,10]
+            while user_score > 21:  #WRONG, NEEDS FIXING
+                got_ace = False
+                user_score, got_ace = check_for_ace(user_list, user_score, got_ace)
+                if got_ace == False:
+                    print("Computer wins!")
+                    print(f"Computer's cards: {pc_list}, computer's score: {pc_score}")
+                    return
+                break
+    '''User does not want an extra card'''
+    if user_score == 21:   #[7,4,10]
+        if playgame(user_score, user_list, pc_score, pc_list, game_starts):  #RECURSION, dang I'm good
+            return    #checking if return True to exit out of game
+
+    #The user can decide his or her score is good enough and now the pc must win, tie , or lose the game
+    print(f"Computer cards: {pc_list}, computer score: {pc_score}")#reveal the pc cards and score
+
+    if pc_score > user_score and pc_score < 22: #at this point the pc_score<21 still (two cards only)
+        print("Computer wins! You lost.")
+        return
+    '''user stays, is PC's turn and because he or she feels the number is high enough to win'''
+    while pc_score < user_score or pc_score < 22:   #say pc_list = [5,8,11] and user_score = [7, 10]
+        if pc_score == user_score and pc_score < 22:
+            print("It's a tie!")
+            print(f"Computer's cards: {pc_list}, computer's score: {pc_score}")
+            return
+        if pc_score > user_score and pc_score < 22:
+            print("Computer wins! You lost.")
+            print(f"Computer's cards: {pc_list}, computer score: {pc_score}")
+            return
+        pc_score = need_card(pc_list, pc_score)   #say pc_list = [5,8,11,10]; or [11,1]
+        if pc_score > 21:  #or [11,1, we get 2]???, less than 22
+            got_ace = False
+            pc_score, got_ace = check_for_ace(pc_list, pc_score, got_ace)
+            if got_ace == False:
+                print(f"Computer lost. You win!")
+                print(f"Computer cards: {pc_list}, computer score: {pc_score}")
+            return
+        #WHAT IF THE pc_score > user_score, BUT pc_score < 22
+    #check who wins b
+    winner = who_wins(user_score, pc_score)
+
+
+ # keep track of score to reach 21
+user_score = 0
+pc_score = 0
+# list to store and display the random cards for each player
+user_list = []
+pc_list = []
+game_starts = 0
+
+play = input("Do you want to play BlackJack. 'y' or 'n'?: ").lower()
+if play == "y":
+    print(logo)
+    playgame(user_score, user_list, pc_score, pc_list, game_starts)
+
+
